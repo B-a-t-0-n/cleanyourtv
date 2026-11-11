@@ -116,9 +116,15 @@ final class AppLibraryDialog {
         Rect rect = new Rect(0, 0, card.getWidth(), card.getHeight());
         shelf.offsetDescendantRectToMyCoords(card, rect);
         ViewGroup.LayoutParams lp = highlight.getLayoutParams();
-        lp.width = rect.width() + dp(12);
-        lp.height = rect.height() + dp(12);
-        highlight.setLayoutParams(lp);
+        int width = rect.width() + dp(12);
+        int height = rect.height() + dp(12);
+        // Moving the glass between equally sized cards only changes its translation.
+        // setLayoutParams requests a layout even when its dimensions are unchanged.
+        if (lp.width != width || lp.height != height) {
+            lp.width = width;
+            lp.height = height;
+            highlight.setLayoutParams(lp);
+        }
         highlight.setTranslationY(rect.top - dp(6));
         float x = rect.left - dp(6) + scrollOffset;
         if (!highlightShown || !animate || !animations) {
