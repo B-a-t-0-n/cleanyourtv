@@ -1,12 +1,8 @@
 package com.gathin.tvhome;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.AtomicFile;
-import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,13 +16,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /** Offline, externally installed theme packs. A complete immutable profile is published by one pointer. */
 final class ThemeCatalog {
-    private static final ExecutorService IO = Executors.newSingleThreadExecutor();
     private ThemeCatalog() { }
+
+    static final class Entry {
+        final String id, name;
+        final File dir;
+        final boolean current;
+
+        Entry(String id, String name, File dir, boolean current) {
+            this.id = id;
+            this.name = name;
+            this.dir = dir;
+            this.current = current;
+        }
+
+        File file(String name) throws IOException { return ThemeCatalogPolicy.child(dir, name); }
+    }
 
     private static File catalog(Context ctx) throws IOException {
         File root = ctx.getExternalFilesDir(null);
@@ -145,7 +153,7 @@ final class ThemeCatalog {
         if (!stage.renameTo(ready)) throw new IOException("Cannot publish theme folder");
     }
 
-    private static void apply(Context ctx, String id) throws Exception {
+    static void apply(Context ctx, String id) throws Exception {
         File themes = catalog(ctx);
         File profiles = ThemeCatalogPolicy.child(themes, ".profiles");
         if (!profiles.mkdirs() && !profiles.isDirectory()) throw new IOException("Cannot create theme profiles");
@@ -205,74 +213,33 @@ final class ThemeCatalog {
         edit.commit();
     }
 
-    static void show(Activity activity, Runnable applied) {
-        IO.execute(() -> {
-            try {
-                File themes = catalog(activity);
-                JSONArray index = new JSONObject(text(ThemeCatalogPolicy.child(themes, "index.json"), 32768))
-                        .getJSONArray("themes");
-                if (index.length() > 64) throw new IOException("Too many themes");
-                List<String> ids = new ArrayList<>(), labels = new ArrayList<>();
-                String current;
-                try { current = selection(themes)[1]; } catch (IOException | RuntimeException e) { current = ""; }
-                File before = ThemeCatalogPolicy.child(themes, ".profiles/before/config.json");
-                if (before.isFile()) {
-                    ids.add("");
-                    labels.add(activity.getString(R.string.themes_restore) + (current.isEmpty() ? " ✓" : ""));
-                }
-                for (int i = 0; i < index.length(); i++) {
-                    JSONObject item = index.getJSONObject(i);
-                    String id = item.getString("id"), label = item.getString("name");
-                    if (!ThemeCatalogPolicy.id(id) || label.length() > 80 || ids.contains(id)) continue;
-                    ids.add(id);
-                    labels.add(label + (id.equals(current) ? " ✓" : ""));
-                }
-                activity.runOnUiThread(() -> {
-                    if (activity.isFinishing() || activity.isDestroyed()) return;
-                    new AlertDialog.Builder(activity).setTitle(R.string.themes)
-                            .setItems(labels.toArray(new String[0]), (dialog, which) ->
-                                    confirm(activity, ids.get(which), labels.get(which), applied))
-                            .setNegativeButton(android.R.string.cancel, null).show();
-                });
-            } catch (Exception e) { error(activity, e); }
-        });
+    /** Read only; callers perform disk work off the UI thread. */
+    static List<Entry> entries(Context ctx) throws Exception {
+        File themes = catalog(ctx);
+        JSONArray index = new JSONObject(text(ThemeCatalogPolicy.child(themes, "index.json"), 32768))
+                .getJSONArray("themes");
+        if (index.length() > 64) throw new IOException("Too many themes");
+        String current;
+        try { current = selection(themes)[1]; } catch (IOException | RuntimeException e) { current = null; }
+        List<Entry> entries = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+        File before = ThemeCatalogPolicy.child(themes, ".profiles/before");
+        if (ThemeCatalogPolicy.child(before, "config.json").isFile())
+            entries.add(new Entry("", ctx.getString(R.string.themes_restore), before, "".equals(current)));
+        for (int i = 0; i < index.length(); i++) {
+            JSONObject item = index.getJSONObject(i);
+            String id = item.getString("id"), label = item.getString("name");
+            if (!ThemeCatalogPolicy.id(id) || label.isEmpty() || label.length() > 80 || ids.contains(id)) continue;
+            File dir = ThemeCatalogPolicy.child(themes, id);
+            if (!ThemeCatalogPolicy.child(dir, "config.json").isFile()) continue;
+            ids.add(id);
+            entries.add(new Entry(id, label, dir, id.equals(current)));
+        }
+        if (entries.isEmpty()) throw new IOException("No installed themes");
+        return entries;
     }
 
-    private static void confirm(Activity activity, String id, String name, Runnable applied) {
-        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle(name).setMessage(R.string.themes_preserved)
-                .setPositiveButton(R.string.themes_apply, (d, w) -> {
-                    Toast.makeText(activity, R.string.themes_working, Toast.LENGTH_SHORT).show();
-                    IO.execute(() -> {
-                        try {
-                            apply(activity, id);
-                            activity.runOnUiThread(() -> {
-                                if (!activity.isFinishing() && !activity.isDestroyed()) applied.run();
-                            });
-                        } catch (Exception e) { error(activity, e); }
-                    });
-                }).setNegativeButton(android.R.string.cancel, null).create();
-        File root = activity.getExternalFilesDir(null);
-        if (!id.isEmpty() && root != null && new File(root, "themes/" + id + "/CREDITS.md").isFile())
-            dialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.themes_credits), (d, w) ->
-                IO.execute(() -> {
-                    try {
-                        File dir = ThemeCatalogPolicy.child(catalog(activity), id);
-                        String credits = text(ThemeCatalogPolicy.child(dir, "CREDITS.md"), 65536);
-                        activity.runOnUiThread(() -> {
-                            if (!activity.isFinishing() && !activity.isDestroyed())
-                                new AlertDialog.Builder(activity).setTitle(R.string.themes_credits).setMessage(credits)
-                                        .setPositiveButton(android.R.string.ok, null).show();
-                        });
-                    } catch (Exception e) { error(activity, e); }
-                }));
-        dialog.show();
-    }
-
-    private static void error(Activity activity, Exception e) {
-        Log.w("TvHome.Themes", "Offline theme operation failed", e);
-        activity.runOnUiThread(() -> {
-            if (!activity.isFinishing() && !activity.isDestroyed())
-                Toast.makeText(activity, R.string.themes_failed, Toast.LENGTH_LONG).show();
-        });
+    static String credits(Entry entry) throws IOException {
+        return text(entry.file("CREDITS.md"), 65536);
     }
 }

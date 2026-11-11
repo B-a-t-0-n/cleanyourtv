@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="themes">Темы · офлайн</string>
+    <string name="home_pill_label">Домой</string>
+    <string name="themes_current">Текущая</string>
+    <string name="themes_preview">Предпросмотр темы</string>
+    <string name="themes_preview_missing">В пакете этой темы нет скриншота. Посмотрите другую тему или примените эту по названию.</string>
+    <string name="themes_restore_preview">Ваше сохранённое оформление\nСкриншот не сохранён. Нажмите «Применить тему», чтобы вернуть прежнее оформление.</string>
+    <string name="themes_browse_hint">← → Выбор · ↓ Действия · Тему меняет только «Применить». Приложения, действия пульта, масштаб и анимации сохраняются.</string>
+    <string name="themes_restore_hint">Вернуть оформление до первого выбора темы. Текущие приложения, действия пульта, масштаб и анимации сохранятся.</string>
+    <string name="themes_back">Назад</string>
     <string name="themes_restore">До выбора темы</string>
     <string name="themes_preserved">Изменится оформление. Ваши приложения, действия пульта, масштаб и настройки анимации сохранятся. Прежнее оформление можно вернуть.</string>
     <string name="themes_apply">Применить тему</string>

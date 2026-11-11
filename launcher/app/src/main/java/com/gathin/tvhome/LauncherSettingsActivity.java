@@ -21,6 +21,7 @@ import java.util.List;
 
 /** Remote-friendly settings owned by the launcher; system settings stay one row away. */
 public final class LauncherSettingsActivity extends Activity {
+    private static final int REQUEST_THEMES = 43;
     @Override
     protected void attachBaseContext(android.content.Context base) {
         super.attachBaseContext(LauncherLocale.wrap(base));   // locale
@@ -125,10 +126,8 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
-        findViewById(R.id.themesChoice).setOnClickListener(v -> ThemeCatalog.show(this, () -> {
-            changed();
-            recreate();
-        }));
+        findViewById(R.id.themesChoice).setOnClickListener(v ->
+                startActivityForResult(new Intent(this, ThemeGalleryActivity.class), REQUEST_THEMES));
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -185,6 +184,15 @@ public final class LauncherSettingsActivity extends Activity {
         LinearLayout row = (LinearLayout) views[0].getParent();
         row.removeAllViews();
         for (int i = views.length - 1; i >= 0; i--) row.addView(views[i]);
+    }
+
+    @Override
+    protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request == REQUEST_THEMES && result == RESULT_OK) {
+            changed();
+            recreate();
+        }
     }
 
     private void showWallpaperPicker() {

@@ -1,7 +1,11 @@
 # Offline theme catalogue (Station fork)
 
-Launcher settings → **Themes · offline** opens a local catalogue, marks the current
-theme, offers its picture credits and applies it with OK. It never downloads files.
+Launcher settings → **Themes · offline** opens a local gallery with a large
+screenshot, the selected theme's name and a mark on the current theme. Left/Right
+browses the horizontal list and changes only the preview; Down reaches the
+separate Apply, Credits and Back buttons. OK on a theme never applies it.
+The Home-shaped launcher-settings pill is labelled **Home** in this fork.
+The gallery never downloads files.
 The small APK contains no wallpaper bundle or INTERNET permission.
 
 Reproduce the separate pack from this checkout with Python (no Android tools):
@@ -20,7 +24,7 @@ Install the pack separately under the application's external files directory:
 ```text
 themes/index.json
 themes/stockholm/config.json
-themes/stockholm/screenshot.jpg       optional; retained, not rendered by the compact picker
+themes/stockholm/screenshot.jpg       gallery preview; optional with a clear missing-preview message
 themes/stockholm/CREDITS.md           when the theme has picture credits
 themes/stockholm/wallpaper.jpg        for a single picture, or
 themes/stockholm/wallpapers/*.jpg     jpg, jpeg, png and webp are accepted
@@ -71,8 +75,8 @@ theme upload. Published profiles remain immutable. A direct shell copy bypasses
 the provider: remove `themes/active` and `themes/active.bak` explicitly to select
 the root theme, then restart Home using the existing external theme tools.
 
-The catalogue feature currently adds about 5 KiB beyond the upstream 576 KiB
-APK budget. The upstream size gate and CI are unchanged, so this fork's feature
+The catalogue and gallery currently exceed the upstream 576 KiB APK budget.
+The upstream size gate and CI are unchanged, so this fork's feature
 branch does not yet pass that size check. Launcher unit tests, lint and the
 release build are checked separately; passing them does not imply the size
 gate passes. Wallpapers remain outside the APK.

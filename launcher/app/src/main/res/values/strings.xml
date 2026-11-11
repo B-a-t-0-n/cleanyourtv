@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="themes">Themes · offline</string>
+    <string name="home_pill_label">Home</string>
+    <string name="themes_current">Current</string>
+    <string name="themes_preview">Theme preview</string>
+    <string name="themes_preview_missing">No screenshot in this theme pack. Browse another theme or apply this one by name.</string>
+    <string name="themes_restore_preview">Your saved appearance\nNo screenshot was saved. Apply to restore the previous appearance.</string>
+    <string name="themes_browse_hint">← → Browse · ↓ Actions · Only Apply changes the theme. Apps, remote actions, scale and animations are preserved.</string>
+    <string name="themes_restore_hint">Restore the appearance saved before the first theme change. Your current apps, remote actions, scale and animations are preserved.</string>
+    <string name="themes_back">Back</string>
     <string name="themes_restore">Before choosing a theme</string>
     <string name="themes_preserved">Apply appearance only. Your apps, remote actions, scale and animation settings stay as they are. The previous appearance can be restored.</string>
     <string name="themes_apply">Apply theme</string>
