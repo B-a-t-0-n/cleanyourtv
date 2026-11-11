@@ -677,7 +677,8 @@ final class AppLibraryDialog {
             holder.itemView.setOnFocusChangeListener((v, focused) -> {
                 if (focused) {
                     selectedPackage = pkg;
-                    instructions.setText(hint(onHome.test(pkg)));
+                    String message = hint(onHome.test(pkg));
+                    if (!message.contentEquals(instructions.getText())) instructions.setText(message);
                     v.post(() -> { if (v.hasFocus() && catalog != null) highlight(v, true); });
                     int index = holder.getBindingAdapterPosition();
                     if (index != RecyclerView.NO_POSITION) selectedPosition = index;
