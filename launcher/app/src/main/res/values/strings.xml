@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="themes">Themes · offline</string>
+    <string name="themes_restore">Before choosing a theme</string>
+    <string name="themes_preserved">Apply appearance only. Your apps, remote actions, scale and animation settings stay as they are. The previous appearance can be restored.</string>
+    <string name="themes_apply">Apply theme</string>
+    <string name="themes_credits">Picture credits</string>
+    <string name="themes_working">Preparing theme…</string>
+    <string name="themes_failed">Cannot open or apply the offline theme pack. The previous appearance is kept.</string>
     <string name="app_name">Home</string>
     <string name="inputs">Inputs</string>
     <string name="wifi">Wi-Fi</string>

@@ -1,5 +1,7 @@
 # Themes
 
+This Station fork also supports an [offline catalogue on the TV](../docs/offline-themes.md), supplied as a separate local pack.
+
 A theme is a folder with a `config.json` and, optionally, a picture: a `wallpaper.jpg` or a `wallpapers/`
 collection. Pushing one changes the launcher's dock, layout and look on the TV without rebuilding the
 APK: the launcher reads `config.json` as an overlay over its built-in `config.xml` the next time it starts.

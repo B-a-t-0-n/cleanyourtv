@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 /**
- * Lets tools/theme.sh write the theme files into {@link Config#dir} on firmware where the adb shell is
+ * Lets tools/theme.sh write theme files into the original external root on firmware where the adb shell is
  * locked out of Android/data (TCL G07, Android 11). Only the files {@link ThemeFiles} allows, and only for
  * callers holding WRITE_SECURE_SETTINGS, which the adb shell has and ordinary apps cannot get.
  *
@@ -23,7 +23,7 @@ public class ThemeProvider extends ContentProvider {
 
     private File file(Uri uri) throws FileNotFoundException {
         String path = ThemeFiles.path(uri.getPathSegments());
-        File dir = Config.dir(getContext());
+        File dir = getContext().getExternalFilesDir(null);
         if (dir == null || path == null) throw new FileNotFoundException(String.valueOf(uri));
         File f = new File(dir, path);
         File parent = f.getParentFile();
@@ -35,24 +35,35 @@ public class ThemeProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
         File f = file(uri);
         if (mode.contains("w")) {
-            return ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_WRITE_ONLY
+            ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_WRITE_ONLY
                     | ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.MODE_TRUNCATE);
+            try {
+                ThemeCatalog.externalTheme(getContext());
+            } catch (java.io.IOException e) {
+                try { descriptor.close(); } catch (java.io.IOException ignored) { }
+                throw new FileNotFoundException(e.getMessage());
+            }
+            return descriptor;
         }
         return ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
     }
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        File dir = Config.dir(getContext());
+        File dir = getContext().getExternalFilesDir(null);
         if (dir != null && ThemeFiles.isCollection(uri.getPathSegments())) {
+            try { ThemeCatalog.externalTheme(getContext()); }
+            catch (java.io.IOException e) { return 0; }
             File[] images = new File(dir, ThemeFiles.WALLPAPERS).listFiles((d, name) -> ThemeFiles.collectionImage(name));
             int n = 0;
             if (images != null) for (File f : images) if (f.delete()) n++;
             return n;
         }
         try {
-            return file(uri).delete() ? 1 : 0;
-        } catch (FileNotFoundException e) {
+            File target = file(uri);
+            ThemeCatalog.externalTheme(getContext());
+            return target.delete() ? 1 : 0;
+        } catch (java.io.IOException e) {
             return 0;
         }
     }

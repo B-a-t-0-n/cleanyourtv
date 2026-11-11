@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="themes">Темы · офлайн</string>
+    <string name="themes_restore">До выбора темы</string>
+    <string name="themes_preserved">Изменится оформление. Ваши приложения, действия пульта, масштаб и настройки анимации сохранятся. Прежнее оформление можно вернуть.</string>
+    <string name="themes_apply">Применить тему</string>
+    <string name="themes_credits">Авторы изображений</string>
+    <string name="themes_working">Подготовка темы…</string>
+    <string name="themes_failed">Не удалось открыть или применить локальный пакет тем. Прежнее оформление сохранено.</string>
     <string name="app_name">Главный экран</string>
     <string name="inputs">Источники</string>
     <string name="wifi">Wi-Fi</string>

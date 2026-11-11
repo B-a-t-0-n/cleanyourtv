@@ -2,6 +2,13 @@ package com.gathin.tvhome;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Environment;
+import android.util.DisplayMetrics;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -23,14 +30,46 @@ final class LauncherLocale {
         return Locale.forLanguageTag(tag.trim());
     }
 
-    /** base with the configured language, or base itself when locale is off. */
+    /** Activity-local language and optional UI scale; the TV and other apps keep their resources. */
     static Context wrap(Context base) {
         Locale locale = parse(Config.load(base).locale);
-        if (locale == null) return base;
-        // Formatters that take no Context (the clock's date, the lunar line) follow the default locale.
-        Locale.setDefault(locale);
+        int scale = readScale(base);
+        if (locale == null && scale == LauncherScale.DEFAULT_PERCENT) return base;
         Configuration c = new Configuration(base.getResources().getConfiguration());
-        c.setLocale(locale);
+        if (locale != null) {
+            // Formatters that take no Context (the clock's date, the lunar line) follow the default locale.
+            Locale.setDefault(locale);
+            c.setLocale(locale);
+        }
+        if (scale != LauncherScale.DEFAULT_PERCENT) {
+            int density = c.densityDpi;
+            if (density <= 0) density = base.getResources().getDisplayMetrics().densityDpi;
+            if (density <= 0) density = DisplayMetrics.DENSITY_DEFAULT;
+            int scaled = LauncherScale.densityDpi(density, scale);
+            c.screenWidthDp = LauncherScale.screenDp(c.screenWidthDp, density, scaled);
+            c.screenHeightDp = LauncherScale.screenDp(c.screenHeightDp, density, scaled);
+            c.smallestScreenWidthDp = LauncherScale.screenDp(c.smallestScreenWidthDp, density, scaled);
+            c.densityDpi = scaled;
+            // Keep fontScale: Android derives scaledDensity from this density and the user's font size.
+        }
         return base.createConfigurationContext(c);
+    }
+
+    /** Same overlay location, boot fallback, size limit and UTF-8 BOM handling as Config. Never writes. */
+    private static int readScale(Context base) {
+        File dir = Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+                ? Config.dir(base) : base.getFilesDir();
+        File file = dir == null ? null : new File(dir, Config.FILE_NAME);
+        if (file == null || !file.isFile() || file.length() > 64 * 1024) return LauncherScale.DEFAULT_PERCENT;
+        try (InputStream in = new FileInputStream(file)) {
+            byte[] bytes = new byte[(int) file.length()];
+            int n = 0, read;
+            while (n < bytes.length && (read = in.read(bytes, n, bytes.length - n)) > 0) n += read;
+            String text = new String(bytes, 0, n, StandardCharsets.UTF_8);
+            if (text.startsWith("\uFEFF")) text = text.substring(1);
+            return LauncherScale.percent(new JSONObject(text).opt("ui_scale_percent"));
+        } catch (Exception ignored) {
+            return LauncherScale.DEFAULT_PERCENT;
+        }
     }
 }

@@ -125,6 +125,10 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
+        findViewById(R.id.themesChoice).setOnClickListener(v -> ThemeCatalog.show(this, () -> {
+            changed();
+            recreate();
+        }));
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;

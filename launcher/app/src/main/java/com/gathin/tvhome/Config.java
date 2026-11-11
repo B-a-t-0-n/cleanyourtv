@@ -434,9 +434,9 @@ final class Config {
         return GLASS_HALO.equalsIgnoreCase(v) ? GLASS_HALO : GLASS_DEFAULT;
     }
 
-    /** The folder the theme tools push into; null when external storage is unavailable. */
+    /** Active catalogue profile, or the external theme root; null when storage is unavailable. */
     static File dir(Context ctx) {
-        return ctx.getExternalFilesDir(null);
+        return ThemeCatalog.activeDir(ctx, ctx.getExternalFilesDir(null));
     }
 
     static Config load(Context ctx) {

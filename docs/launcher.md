@@ -32,6 +32,16 @@ and `sdkmanager "platforms;android-34" "build-tools;34.0.0"`. On Linux the insta
 
 Themes set the same keys plus a background colour and a wallpaper.
 
+This fork also accepts `"ui_scale_percent": 160` in `config.json` to enlarge only the
+launcher's screens, dialogs and clock. The default is `100`; whole JSON numbers from `100`
+through `200` are accepted. A missing, malformed, fractional or out-of-range value uses `100`.
+The TV's display density, other apps, selected launcher language and system font-size preference
+are preserved. On a 1920×1080 display at 160 dpi, `160` gives the launcher a local 256 dpi
+configuration (1200×675 dp), so a 180 dp tile is approximately 288 pixels wide. The existing
+theme layout can still shrink tiles to fit its columns. The bundled theme picker preserves this
+key when switching themes. Changes take effect when a launcher activity is recreated; an already
+open activity keeps its current scale until then.
+
 ## Launcher settings and the default home
 
 Click **Settings** for the TV's own settings. Hold OK on it for its menu:
